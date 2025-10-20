@@ -11,8 +11,9 @@ export KCONFIG_SOC_GS_PREFIX := google-modules/soc/gs/
 export KCONFIG_EXT_MODULES_PREFIX := ./
 KCFLAGS += -D__ANDROID_COMMON_KERNEL__
 
-ifeq ($(MAKECMDGOALS),)
+ifeq ($(strip $(MAKECMDGOALS)),)
 MAKECMDGOALS := Image.lz4 google/dtbo.img dtbs
+need-sub-make := 1
 endif
 
 # *DOCUMENTATION*
