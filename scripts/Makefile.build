@@ -98,6 +98,9 @@ ifneq ($(userprogs),)
 include $(srctree)/scripts/Makefile.userprogs
 endif
 
+# Do not include dtbo rules unless needed
+include scripts/Makefile.dtbo
+
 ifndef obj
 $(warning kbuild: Makefile.build is included improperly)
 endif

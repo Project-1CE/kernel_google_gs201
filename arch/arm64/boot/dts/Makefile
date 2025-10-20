@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
+
+ifneq (,)
+
 subdir-y += actions
 subdir-y += allwinner
 subdir-y += altera
@@ -32,3 +35,7 @@ subdir-y += tesla
 subdir-y += ti
 subdir-y += toshiba
 subdir-y += xilinx
+
+endif
+
+subdir-y += google

@@ -12,7 +12,7 @@ export KCONFIG_EXT_MODULES_PREFIX := ./
 KCFLAGS += -D__ANDROID_COMMON_KERNEL__
 
 ifeq ($(MAKECMDGOALS),)
-MAKECMDGOALS := Image.lz4 dtbs
+MAKECMDGOALS := Image.lz4 google/dtbo.img dtbs
 endif
 
 # *DOCUMENTATION*
@@ -1535,16 +1535,23 @@ ifneq ($(wildcard $(srctree)/arch/$(SRCARCH)/boot/dts/),)
 dtstree ?= arch/$(SRCARCH)/boot/dts
 endif
 
-dtstree := google-devices/gs201/dts
+# dtstree := google-devices/gs201/dts
 DTC_INCLUDE := $(srctree)/google-modules/soc/gs/include/dtc
 export DTC_INCLUDE
 
 ifneq ($(dtstree),)
 
+# Define order-only-prerequisites to avoid races in sub make
+$(filter %/dtbo.img, $(MAKECMDGOALS)): %/dtbo.img: | $(filter %.dtbo %.dtb dtbs,$(MAKECMDGOALS))
+$(filter %.dtbo, $(MAKECMDGOALS)): %.dtbo: | $(filter %.dtb dtbs,$(MAKECMDGOALS))
+
 %.dtb: dtbs_prepare
 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
 
 %.dtbo: dtbs_prepare
+	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
+
+%/dtbo.img: dtbs_prepare
 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
 
 PHONY += dtbs dtbs_prepare dtbs_install dtbs_check
@@ -1554,7 +1561,7 @@ dtbs: dtbs_prepare
 # include/config/kernel.release is actually needed when installing DTBs because
 # INSTALL_DTBS_PATH contains $(KERNELRELEASE). However, we do not want to make
 # dtbs_install depend on it as dtbs_install may run as root.
-dtbs_prepare: include/config/kernel.release scripts_dtc
+dtbs_prepare: include/config/kernel.release scripts_dtc scripts_mkdtimg
 
 ifneq ($(filter dtbs_check, $(MAKECMDGOALS)),)
 export CHECK_DTBS=y
@@ -1572,9 +1579,12 @@ endif
 
 endif
 
-PHONY += scripts_dtc
+PHONY += scripts_dtc scripts_mkdtimg
 scripts_dtc: scripts_basic
-	$(Q)$(MAKE) $(build)=scripts/dtc
+	$(Q)$(MAKE) $(build)=scripts/dtc-aosp
+
+scripts_mkdtimg: scripts_dtc
+	$(Q)$(MAKE) $(build)=scripts/libufdt
 
 ifneq ($(filter dt_binding_check, $(MAKECMDGOALS)),)
 export CHECK_DT_BINDING=y
